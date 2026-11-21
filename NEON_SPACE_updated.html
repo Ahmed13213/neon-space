@@ -1,0 +1,551 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON SPACE</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:#050609;color:white;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;background-image:linear-gradient(rgba(0,220,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(0,220,255,.035) 1px,transparent 1px);background-size:45px 45px;pointer-events:none;z-index:0}
+#starField{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:1}
+.star{position:absolute;width:2px;height:2px;background:white;border-radius:50%;box-shadow:0 0 3px currentColor;animation:starMove var(--speed) linear infinite;animation-delay:var(--delay)}
+.star.cyan{color:#00eaff}.star.purple{color:#bd72ff}.star.red{color:#ff3c64}
+@keyframes starMove{0%{transform:translate(0,0);opacity:.2}20%,80%{opacity:1}100%{transform:translate(var(--distance-x),var(--distance-y));opacity:.2}}
+.orb{position:fixed;width:280px;height:280px;border-radius:50%;filter:blur(100px);opacity:.25;pointer-events:none;z-index:0}
+.one{background:#00d9ff;top:5%;left:10%}.two{background:#a000ff;bottom:5%;right:10%}.three{background:#ff008c;top:40%;right:40%;opacity:.12}
+.cursor-glow{position:fixed;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(0,220,255,.12),transparent 70%);transform:translate(-50%,-50%);pointer-events:none;z-index:1}
+.frame{position:fixed;inset:18px;border:1px solid rgba(0,220,255,.18);border-radius:18px;pointer-events:none;z-index:2}
+main{position:relative;z-index:3;text-align:center;padding:30px}
+h1{font-size:clamp(42px,8vw,85px);letter-spacing:7px;direction:ltr;background:linear-gradient(90deg,#00eaff,#a855f7,#ff35b8);-webkit-background-clip:text;background-clip:text;color:transparent}
+.subtitle{margin-top:18px;color:#a8b4c8;font-size:17px;letter-spacing:2px}
+.line{width:170px;height:2px;margin:28px auto;background:linear-gradient(90deg,transparent,#00eaff,#b34cff,transparent);box-shadow:0 0 15px #00d9ff}
+.main-button{padding:14px 35px;border:1px solid #00d9ff;border-radius:30px;color:#00eaff;background:rgba(0,220,255,.06);font-size:16px;cursor:pointer;transition:.3s}
+.main-button:hover{background:rgba(0,220,255,.18);box-shadow:0 0 30px rgba(0,220,255,.4);transform:translateY(-3px)}
+.creator{margin-top:28px;color:#8cefff;font-size:14px;letter-spacing:1px}
+.creator span{color:#fff;font-weight:bold}
+.modal-overlay{position:fixed;inset:0;background:rgba(5,6,9,.25);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:10;padding:18px}
+.modal-overlay.active{display:flex}
+.modal{width:min(850px,100%);max-height:92vh;overflow-y:auto;background:rgba(16,18,29,.97);border:1px solid rgba(0,220,255,.35);border-radius:20px;padding:35px 25px;position:relative;box-shadow:0 0 40px rgba(0,220,255,.13);animation:appear .3s ease}
+@keyframes appear{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.close{position:absolute;top:12px;left:17px;background:none;border:none;color:#aaa;font-size:27px;cursor:pointer;z-index:2}
+.close:hover{color:#00eaff}
+.modal h2{color:#00eaff;margin-bottom:12px;font-size:27px}
+.modal-description{color:#aab4c7;margin-bottom:25px;line-height:1.8}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.card{padding:22px 10px;min-height:110px;border:1px solid transparent;border-radius:13px;background:linear-gradient(#111522,#111522) padding-box,linear-gradient(135deg,#00eaff,#a855f7,#ff35b8) border-box;color:white;cursor:pointer;transition:.3s}
+.card:hover{transform:translateY(-6px);box-shadow:0 0 22px rgba(0,220,255,.2)}
+.card h3{font-size:17px;margin-bottom:8px}.card p{color:#aab4c7;font-size:12px}
+.card-result{margin-top:20px;padding:15px;color:#d7e7f5;background:rgba(0,220,255,.06);border-radius:10px;border:1px solid rgba(0,220,255,.18);line-height:1.7;display:none}
+.store,.story,.drawing{display:none}
+.store.active,.story.active,.drawing.active{display:block}
+.store-top,.story-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.back-button,.download-button,.music-button{border:1px solid #a855f7;background:rgba(168,85,247,.08);color:#d8aaff;padding:9px 15px;border-radius:20px;cursor:pointer}
+.download-button,.music-button{border-color:#00d9ff;color:#00eaff;background:rgba(0,220,255,.07)}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+.product{background:rgba(255,255,255,.025);border:1px solid rgba(0,220,255,.2);border-radius:14px;padding:18px;text-align:right;transition:.25s}
+.product:hover{border-color:#00eaff;box-shadow:0 0 18px rgba(0,220,255,.12);transform:translateY(-3px)}
+.product-icon{font-size:32px;margin-bottom:12px}.product h3{color:#fff;margin-bottom:8px;font-size:17px}
+.product p{color:#aab4c7;font-size:13px;line-height:1.7;min-height:44px}
+.product button{width:100%;margin-top:14px;padding:10px;border:1px solid #00d9ff;border-radius:9px;color:#00eaff;background:rgba(0,220,255,.07);cursor:pointer}
+.store-note{color:#8793a9;font-size:12px;line-height:1.7;margin-top:18px}
+.story-intro{text-align:center;margin:5px 0 25px}
+.story-intro h2{font-size:29px;text-shadow:0 0 18px #00d9ff}
+.story-intro p{color:#aab4c7;margin-top:10px;line-height:1.8}
+.story-chapter{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px;align-items:center;padding:20px 0;border-bottom:1px solid rgba(0,220,255,.17)}
+.story-chapter:nth-child(even) .chapter-image{order:2}
+.chapter-image{width:100%;height:210px;object-fit:cover;border-radius:13px;border:1px solid rgba(0,220,255,.4);box-shadow:0 0 18px rgba(0,220,255,.12)}
+.chapter-text .era{color:#00eaff;font-size:12px;letter-spacing:1px;margin-bottom:9px}
+.chapter-text h3{font-size:21px;color:#fff;margin-bottom:10px}
+.chapter-text p{font-size:14px;color:#bdc7d7;line-height:1.9}
+.story-end{text-align:center;padding:25px 10px 5px}
+.story-end h3{color:#00eaff;font-size:22px;margin-bottom:10px}
+.story-end p{color:#b5c1d1;line-height:1.9;font-size:14px}
+.music-controls{text-align:center;margin:0 0 22px;padding:15px;border:1px solid rgba(0,220,255,.2);border-radius:13px;background:rgba(0,220,255,.035)}
+.music-controls p{font-size:12px;color:#aab4c7;margin-top:9px}
+.music-bars{display:flex;justify-content:center;align-items:center;gap:5px;height:23px;margin-bottom:10px}
+.music-bars span{width:4px;height:7px;border-radius:5px;background:#00eaff}
+.music-bars.playing span{animation:wave .7s ease-in-out infinite alternate}
+.music-bars span:nth-child(2){animation-delay:.15s}.music-bars span:nth-child(3){animation-delay:.3s}.music-bars span:nth-child(4){animation-delay:.45s}.music-bars span:nth-child(5){animation-delay:.2s}
+@keyframes wave{to{height:22px;box-shadow:0 0 9px #00eaff}}
+
+/* واجهة الرسم */
+.drawing-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.drawing-heading h2{margin:0}
+.drawing-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:13px;background:#111827;border:1px solid rgba(0,220,255,.2);border-radius:13px;margin-bottom:13px}
+.tool-button{border:1px solid #344155;background:#1b2535;color:#e8f5ff;border-radius:9px;padding:10px 13px;cursor:pointer;font-size:13px}
+.tool-button:hover,.tool-button.selected{border-color:#00eaff;color:#00eaff;background:#12303b}
+.tool-button.danger{border-color:#85404d;color:#ff8798}
+.tool-button.save{border-color:#00d9a6;color:#61f5c4}
+.color-control{display:flex;align-items:center;gap:7px;color:#c8d5e5;font-size:13px}
+#drawColor{width:38px;height:35px;border:0;background:transparent;cursor:pointer}
+.size-control{display:flex;align-items:center;gap:8px;color:#c8d5e5;font-size:13px}
+#brushSize{width:105px;accent-color:#00eaff}
+#sizeValue{color:#00eaff;min-width:25px}
+.paper-wrap{background:#252c39;padding:10px;border-radius:12px;border:1px solid rgba(0,220,255,.2)}
+#drawingCanvas{display:block;width:100%;height:clamp(300px,48vh,520px);background:#fff;border-radius:5px;cursor:crosshair;touch-action:none}
+.drawing-hint{text-align:center;color:#8d9caf;font-size:12px;margin-top:12px;line-height:1.7}
+#drawingCanvas{height:760px;transition:height .18s ease}
+.paper-wrap{position:relative;overflow:hidden}
+#brushGlow{position:absolute;left:0;top:0;width:46px;height:46px;border:2px solid rgba(0,238,255,.95);border-radius:50%;pointer-events:none;z-index:5;opacity:0;transform:translate(-50%,-50%);box-shadow:0 0 8px #00eaff,0 0 18px #00eaff,0 0 30px rgba(168,85,247,.9),inset 0 0 12px rgba(255,50,190,.6);background:radial-gradient(circle,rgba(0,234,255,.15),rgba(168,85,247,.08) 55%,transparent 72%);transition:opacity .12s,border-color .15s,box-shadow .15s}
+#brushGlow.visible{opacity:1}
+#brushGlow.pressed{border-color:#ff4bd8;box-shadow:0 0 10px #ff4bd8,0 0 22px #a855f7,0 0 35px #00eaff,inset 0 0 15px rgba(255,50,190,.7)}
+.paper-size-control{display:flex;align-items:center;gap:8px;color:#c8d5e5;font-size:13px}
+#paperHeight{width:120px;accent-color:#a855f7}
+#paperHeightValue{color:#d8aaff;min-width:48px}
+.draw-music-button{border:1px solid #00d9ff;color:#9cefff;background:rgba(0,220,255,.07)}
+.draw-music-button.playing{border-color:#7ce7b2;color:#9fffc9;background:rgba(80,255,170,.08)}
+@media(max-width:560px){
+.cards,.products{grid-template-columns:1fr}
+.modal{padding:35px 17px}
+h1{letter-spacing:3px}
+.story-chapter{grid-template-columns:1fr}
+.story-chapter:nth-child(even) .chapter-image{order:0}
+.chapter-image{height:190px}
+.drawing-toolbar{gap:7px}
+.tool-button{padding:9px 10px}
+}
+</style>
+</head>
+<body>
+<div id="starField"></div>
+<div class="orb one"></div><div class="orb two"></div><div class="orb three"></div>
+<div class="frame"></div>
+<div class="cursor-glow" id="cursorGlow"></div>
+
+<main>
+<h1>NEON SPACE</h1>
+<p class="subtitle">ادخل إلى عالم من الإبداع والتجارب</p>
+<div class="line"></div>
+<button class="main-button" id="openModal">اعرف أكثر</button>
+<p class="creator">صانع الموقع: <span>أحمد نعمة</span></p>
+</main>
+
+<div class="modal-overlay" id="modalOverlay">
+<div class="modal">
+<button class="close" id="closeModal">&times;</button>
+
+<div id="homeContent">
+<h2>مرحباً بك في NEON SPACE</h2>
+<p class="modal-description">اكتشف التجارب والأفكار الموجودة في هذا العالم.</p>
+<div class="cards">
+<button class="card" id="drawingButton"><h3>🎨 الرسم</h3><p>ارسم وصمّم إبداعك</p></button>
+<button class="card" id="storyButton"><h3>🏛️ حضارة العراق</h3><p>رحلة عبر آلاف السنين</p></button>
+<button class="card" id="storeButton"><h3>🛒 المتجر</h3><p>تسوق منتجات ماينكرافت</p></button>
+</div>
+</div>
+
+<div class="drawing" id="drawingContent">
+<div class="drawing-heading">
+<h2>🎨 استوديو الرسم</h2>
+<button class="back-button" id="backDrawing">رجوع</button>
+</div>
+<p class="modal-description">هذه ورقتك. اختَر الأداة واللون وابدأ الرسم بحرية.</p>
+<div class="drawing-toolbar">
+<button class="tool-button selected" id="penTool">✏️ قلم</button>
+<button class="tool-button" id="eraserTool">🧽 ممحاة</button>
+<label class="color-control">اللون <input type="color" id="drawColor" value="#111111"></label>
+<label class="size-control">الحجم <input type="range" id="brushSize" min="1" max="40" value="5"><span id="sizeValue">5</span></label>
+<button class="tool-button" id="undoButton">↶ تراجع</button>
+<button class="tool-button" id="redoButton">↷ إعادة</button>
+<button class="tool-button danger" id="clearButton">مسح الورقة</button>
+<button class="tool-button save" id="saveButton">⬇ حفظ الرسم</button>
+<label class="paper-size-control">ارتفاع الورقة <input type="range" id="paperHeight" min="500" max="1400" step="50" value="760"><span id="paperHeightValue">760px</span></label>
+<button class="tool-button draw-music-button" id="drawMusicToggle">♫ تشغيل موسيقى هادئة</button>
+</div>
+<div class="paper-wrap" id="paperWrap">
+<canvas id="drawingCanvas"></canvas>
+<div id="brushGlow" aria-hidden="true"></div>
+</div>
+<p class="drawing-hint">ارسم بالماوس أو بإصبعك على الورقة. زر «حفظ الرسم» ينزّل عملك كصورة PNG.</p>
+</div>
+
+<div class="store" id="storeContent">
+<div class="store-top"><h2>🛒 متجر NEON</h2><button class="back-button" id="backStore">رجوع</button></div>
+<p class="modal-description">اكتشف منتجات وخدمات عالم ماينكرافت.</p>
+<div class="products">
+<div class="product"><div class="product-icon">🎮</div><h3>حسابات ماينكرافت</h3><p>قسم مخصص لعرض الحسابات وتفاصيل كل حساب.</p><button onclick="showProduct('حسابات ماينكرافت')">عرض التفاصيل</button></div>
+<div class="product"><div class="product-icon">⚒️</div><h3>مودات ومودباكات</h3><p>اكتشف إضافات ومجموعات مودات ماينكرافت.</p><button onclick="showProduct('مودات ومودباكات')">عرض التفاصيل</button></div>
+<div class="product"><div class="product-icon">🌍</div><h3>عوالم وسيرفرات</h3><p>عوالم جاهزة وأفكار وإعدادات للسيرفرات.</p><button onclick="showProduct('عوالم وسيرفرات')">عرض التفاصيل</button></div>
+<div class="product"><div class="product-icon">🛠️</div><h3>خدمات ماينكرافت</h3><p>مساعدة في الإعدادات والتثبيت وحل مشاكل المودات.</p><button onclick="showProduct('خدمات ماينكرافت')">عرض التفاصيل</button></div>
+</div>
+<p class="store-note">هذه واجهة تجريبية. المنتجات والأسعار والشراء الفعلي ستُضاف لاحقاً.</p>
+<div class="card-result" id="productResult"></div>
+</div>
+
+<div class="story" id="storyContent">
+<div class="story-top"><h2>🏛️ حضارة العراق</h2><button class="back-button" id="backStory">رجوع</button></div>
+<div class="story-intro"><h2>من أرض الرافدين إلى بغداد</h2><p>هنا، بين دجلة والفرات، بدأت حكايات غيّرت تاريخ البشرية. هذه ليست مجرد آثار قديمة؛ إنها قصة أرض صنعت حضارات عظيمة.</p></div>
+<div class="music-controls">
+<div class="music-bars" id="musicBars"><span></span><span></span><span></span><span></span><span></span></div>
+<button class="music-button" id="musicToggle">♫ تشغيل الموسيقى</button>
+<p>موسيقى أجواء تاريخية هادئة • تحكم بالصوت متاح</p>
+</div>
+<section class="story-chapter">
+<img class="chapter-image" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ziggurat%20of%20Ur.jpg" alt="زقورة أور">
+<div class="chapter-text"><div class="era">الفصل الأول • الألفية الثالثة قبل الميلاد</div><h3>سومر: بداية الحكاية</h3><p>في جنوب بلاد الرافدين، نشأت مدن سومر مثل أور وأوروك. بنى الناس المدن والمعابد، وطوّروا الكتابة المسمارية لتسجيل شؤون الحياة والتجارة. ومن هذه الأرض ارتفعت زقورة أور شاهدةً على عظمة البناء القديم.</p></div>
+</section>
+<section class="story-chapter">
+<img class="chapter-image" src="https://commons.wikimedia.org/wiki/Special:FilePath/Lamassu%2C%20from%20the%20North-West%20Palace%20at%20Nimrud%2C%20Iraq.%209th%20century%20BCE.%20Iraq%20Museum.jpg" alt="اللاماسو">
+<div class="chapter-text"><div class="era">الفصل الثاني • الألف الأول قبل الميلاد</div><h3>آشور: حراس الممالك</h3><p>في شمال العراق، صعدت الدولة الآشورية وأصبحت قوة كبرى في الشرق القديم. اشتهرت بمدنها وقصورها ونقوشها الضخمة، ومن أشهر رموزها اللاماسو المجنّح الذي كان يحرس مداخل القصور.</p></div>
+</section>
+<section class="story-chapter">
+<img class="chapter-image" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ishtar%20Gate%20at%20the%20Ancient%20City%20of%20Babylon.png" alt="بوابة عشتار">
+<div class="chapter-text"><div class="era">الفصل الثالث • القرن السادس قبل الميلاد</div><h3>بابل: مدينة الأساطير</h3><p>بلغت بابل أوجاً عظيماً في عهد الملك نبوخذ نصر الثاني. عُرفت بأسوارها ومعابدها وبوابة عشتار المزينة بالطوب الأزرق وصور الحيوانات. صارت بابل واحدة من أشهر مدن العالم القديم.</p></div>
+</section>
+<section class="story-chapter">
+<img class="chapter-image" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ziggurate%20of%20Ur-%20Iraq.jpg" alt="آثار العراق">
+<div class="chapter-text"><div class="era">العصر العباسي • من القرن الثامن الميلادي</div><h3>بغداد: مدينة العلم</h3><p>في عام 762م أسّس الخليفة العباسي أبو جعفر المنصور مدينة بغداد لتصبح عاصمة للدولة العباسية. ازدهرت فيها حركة الترجمة والطب والرياضيات والفلك، وارتبط اسمها ببيت الحكمة والعلماء.</p></div>
+</section>
+<div class="story-end"><h3>وهذه ليست نهاية القصة...</h3><p>من ألواح الطين إلى الكتب، ومن الزقورات إلى بغداد، بقي العراق أرضاً تحمل طبقات عميقة من التاريخ. حضارة العراق إرث يستحق أن نعرفه ونحافظ عليه.</p><br><button class="download-button" id="downloadStory">⬇ تنزيل القصة</button></div>
+</div>
+</div>
+</div>
+
+<script>
+// النجوم
+const starField=document.getElementById("starField");
+for(let i=0;i<30;i++){
+ const star=document.createElement("span");
+ star.className="star";
+ const color=Math.random();
+ if(color>.93)star.classList.add("red");
+ else if(color>.82)star.classList.add("purple");
+ else if(color>.65)star.classList.add("cyan");
+ star.style.left=Math.random()*100+"%";
+ star.style.top=Math.random()*100+"%";
+ star.style.setProperty("--speed",(9+Math.random()*13)+"s");
+ star.style.setProperty("--delay",(-Math.random()*20)+"s");
+ star.style.setProperty("--distance-x",(Math.random()*180-90)+"px");
+ star.style.setProperty("--distance-y",(Math.random()*180-90)+"px");
+ starField.appendChild(star);
+}
+
+const glow=document.getElementById("cursorGlow");
+document.addEventListener("mousemove",e=>{
+glow.style.left=e.clientX+"px";glow.style.top=e.clientY+"px";
+});
+
+// التنقل بين الأقسام
+const overlay=document.getElementById("modalOverlay");
+const home=document.getElementById("homeContent");
+const store=document.getElementById("storeContent");
+const story=document.getElementById("storyContent");
+const drawing=document.getElementById("drawingContent");
+const productResult=document.getElementById("productResult");
+
+document.getElementById("openModal").onclick=()=>overlay.classList.add("active");
+
+function showHome(){
+stopMusic();stopDrawMusic();
+home.style.display="block";
+store.classList.remove("active");
+story.classList.remove("active");
+drawing.classList.remove("active");
+productResult.style.display="none";
+}
+function closeWindow(){showHome();overlay.classList.remove("active")}
+document.getElementById("closeModal").onclick=closeWindow;
+overlay.addEventListener("click",e=>{if(e.target===overlay)closeWindow()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeWindow()});
+
+document.getElementById("storeButton").onclick=()=>{
+home.style.display="none";store.classList.add("active");
+};
+document.getElementById("storyButton").onclick=()=>{
+home.style.display="none";story.classList.add("active");startMusic();
+};
+document.getElementById("drawingButton").onclick=()=>{
+home.style.display="none";drawing.classList.add("active");resizeCanvas();startDrawMusic();
+};
+document.getElementById("backDrawing").onclick=showHome;
+document.getElementById("backStore").onclick=showHome;
+document.getElementById("backStory").onclick=showHome;
+
+function showProduct(name){
+productResult.textContent="اخترت قسم: "+name+". هذا القسم جاهز لإضافة المنتجات والتفاصيل والأسعار لاحقاً.";
+productResult.style.display="block";
+}
+
+// نظام الرسم
+const canvas=document.getElementById("drawingCanvas");
+const ctx=canvas.getContext("2d");
+const colorInput=document.getElementById("drawColor");
+const sizeInput=document.getElementById("brushSize");
+const sizeValue=document.getElementById("sizeValue");
+const paperHeightInput=document.getElementById("paperHeight");
+const paperHeightValue=document.getElementById("paperHeightValue");
+const paperWrap=document.getElementById("paperWrap");
+const brushGlow=document.getElementById("brushGlow");
+let drawingNow=false,tool="pen",lastX=0,lastY=0;
+let undoStack=[],redoStack=[];
+let canvasReady=false;
+
+function saveSnapshot(){
+if(!canvasReady)return;
+undoStack.push(canvas.toDataURL());
+if(undoStack.length>40)undoStack.shift();
+redoStack=[];
+}
+function resizeCanvas(){
+const oldImage=canvasReady?canvas.toDataURL():null;
+const rect=canvas.getBoundingClientRect();
+const ratio=window.devicePixelRatio||1;
+canvas.width=Math.round(rect.width*ratio);
+canvas.height=Math.round(rect.height*ratio);
+ctx.setTransform(ratio,0,0,ratio,0,0);
+ctx.fillStyle="#ffffff";
+ctx.fillRect(0,0,rect.width,rect.height);
+if(oldImage){
+const img=new Image();
+img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height);
+img.src=oldImage;
+}
+canvasReady=true;
+undoStack=[];redoStack=[];
+}
+window.addEventListener("resize",()=>{
+if(drawing.classList.contains("active"))resizeCanvas();
+});
+
+function getPosition(e){
+const rect=canvas.getBoundingClientRect();
+return {x:e.clientX-rect.left,y:e.clientY-rect.top};
+}
+function startDraw(e){
+if(!canvasReady)return;
+e.preventDefault();
+canvas.setPointerCapture(e.pointerId);
+const p=getPosition(e);
+drawingNow=true;lastX=p.x;lastY=p.y;
+saveSnapshot();
+ctx.beginPath();
+ctx.arc(lastX,lastY,tool==="eraser"?Number(sizeInput.value)*2:Number(sizeInput.value)/2,0,Math.PI*2);
+ctx.fillStyle=tool==="eraser"?"#ffffff":colorInput.value;
+ctx.fill();
+}
+function draw(e){
+if(!drawingNow)return;
+e.preventDefault();
+const p=getPosition(e);
+ctx.beginPath();
+ctx.moveTo(lastX,lastY);
+ctx.lineTo(p.x,p.y);
+ctx.lineCap="round";
+ctx.lineJoin="round";
+ctx.lineWidth=tool==="eraser"?Number(sizeInput.value)*2:Number(sizeInput.value);
+ctx.strokeStyle=tool==="eraser"?"#ffffff":colorInput.value;
+ctx.stroke();
+lastX=p.x;lastY=p.y;
+}
+function stopDraw(){drawingNow=false}
+canvas.addEventListener("pointerdown",e=>{
+brushGlow.classList.add("pressed");
+startDraw(e);
+});
+canvas.addEventListener("pointermove",e=>{
+const rect=paperWrap.getBoundingClientRect();
+brushGlow.style.left=(e.clientX-rect.left)+"px";
+brushGlow.style.top=(e.clientY-rect.top)+"px";
+brushGlow.style.width=Math.max(34,Number(sizeInput.value)*2+20)+"px";
+brushGlow.style.height=Math.max(34,Number(sizeInput.value)*2+20)+"px";
+brushGlow.classList.add("visible");
+draw(e);
+});
+function finishPointer(){stopDraw();brushGlow.classList.remove("pressed")}
+canvas.addEventListener("pointerup",finishPointer);
+canvas.addEventListener("pointercancel",finishPointer);
+canvas.addEventListener("pointerleave",()=>{finishPointer();brushGlow.classList.remove("visible")});
+paperHeightInput.addEventListener("input",()=>{
+const height=Number(paperHeightInput.value);
+canvas.style.height=height+"px";
+paperHeightValue.textContent=height+"px";
+if(canvasReady)resizeCanvas();
+});
+
+function selectTool(next){
+tool=next;
+document.getElementById("penTool").classList.toggle("selected",tool==="pen");
+document.getElementById("eraserTool").classList.toggle("selected",tool==="eraser");
+canvas.style.cursor=tool==="eraser"?"cell":"crosshair";
+}
+document.getElementById("penTool").onclick=()=>selectTool("pen");
+document.getElementById("eraserTool").onclick=()=>selectTool("eraser");
+sizeInput.oninput=()=>sizeValue.textContent=sizeInput.value;
+
+function restoreSnapshot(data){
+const img=new Image();
+img.onload=()=>{
+const rect=canvas.getBoundingClientRect();
+ctx.clearRect(0,0,rect.width,rect.height);
+ctx.fillStyle="#fff";ctx.fillRect(0,0,rect.width,rect.height);
+ctx.drawImage(img,0,0,rect.width,rect.height);
+};
+img.src=data;
+}
+document.getElementById("undoButton").onclick=()=>{
+if(!undoStack.length)return;
+redoStack.push(canvas.toDataURL());
+restoreSnapshot(undoStack.pop());
+};
+document.getElementById("redoButton").onclick=()=>{
+if(!redoStack.length)return;
+undoStack.push(canvas.toDataURL());
+restoreSnapshot(redoStack.pop());
+};
+document.getElementById("clearButton").onclick=()=>{
+if(!confirm("متأكد تريد تمسح كل الرسم؟"))return;
+saveSnapshot();
+const rect=canvas.getBoundingClientRect();
+ctx.fillStyle="#fff";ctx.fillRect(0,0,rect.width,rect.height);
+};
+document.getElementById("saveButton").onclick=()=>{
+const link=document.createElement("a");
+link.download="رسمتي-NEON-SPACE.png";
+link.href=canvas.toDataURL("image/png");
+link.click();
+};
+
+// موسيقى هادئة خاصة باستوديو الرسم
+let drawAudioContext=null,drawMaster=null,drawMusicTimer=null,drawMusicOn=false,drawNoteIndex=0;
+const drawNotes=[261.63,329.63,392.00,329.63,293.66,349.23,440.00,349.23];
+function playDrawNote(){
+ if(!drawMusicOn||!drawAudioContext||!drawMaster)return;
+ const now=drawAudioContext.currentTime;
+ const osc=drawAudioContext.createOscillator();
+ const gain=drawAudioContext.createGain();
+ const filter=drawAudioContext.createBiquadFilter();
+ osc.type="sine";
+ osc.frequency.value=drawNotes[drawNoteIndex++%drawNotes.length];
+ filter.type="lowpass";filter.frequency.value=900;
+ gain.gain.setValueAtTime(0.0001,now);
+ gain.gain.exponentialRampToValueAtTime(0.018,now+1.1);
+ gain.gain.exponentialRampToValueAtTime(0.0001,now+4.8);
+ osc.connect(filter);filter.connect(gain);gain.connect(drawMaster);
+ osc.start(now);osc.stop(now+5);
+}
+async function startDrawMusic(){
+ if(drawMusicOn)return;
+ const AudioClass=window.AudioContext||window.webkitAudioContext;
+ if(!AudioClass)return;
+ try{
+  if(!drawAudioContext){
+   drawAudioContext=new AudioClass();
+   drawMaster=drawAudioContext.createGain();
+   drawMaster.gain.value=0.55;
+   drawMaster.connect(drawAudioContext.destination);
+  }
+  await drawAudioContext.resume();
+  drawMusicOn=true;
+  playDrawNote();
+  drawMusicTimer=setInterval(playDrawNote,3600);
+  const b=document.getElementById("drawMusicToggle");
+  b.textContent="♫ إيقاف الموسيقى الهادئة";b.classList.add("playing");
+ }catch(err){console.warn("تعذر تشغيل موسيقى الرسم",err)}
+}
+function stopDrawMusic(){
+ drawMusicOn=false;
+ if(drawMusicTimer){clearInterval(drawMusicTimer);drawMusicTimer=null}
+ if(drawMaster&&drawAudioContext){
+  drawMaster.gain.setTargetAtTime(0,drawAudioContext.currentTime,0.12);
+  const oldContext=drawAudioContext;
+  setTimeout(async()=>{
+   if(!drawMusicOn&&drawAudioContext===oldContext){
+    try{await oldContext.close()}catch(e){}
+    drawAudioContext=null;drawMaster=null;
+   }
+  },450);
+ }
+ const b=document.getElementById("drawMusicToggle");
+ if(b){b.textContent="♫ تشغيل موسيقى هادئة";b.classList.remove("playing")}
+}
+document.getElementById("drawMusicToggle").onclick=()=>drawMusicOn?stopDrawMusic():startDrawMusic();
+
+// موسيقى القصة
+let audioContext=null,masterGain=null,musicPlaying=false,musicTimer=null;
+let activeOscillators=[],noteIndex=0,stopToken=0;
+const notes=[220,261.63,329.63,293.66,261.63,196,220,329.63];
+
+function playNote(){
+if(!musicPlaying||!audioContext)return;
+const osc=audioContext.createOscillator();
+const gain=audioContext.createGain();
+const filter=audioContext.createBiquadFilter();
+osc.type="sine";osc.frequency.value=notes[noteIndex++%notes.length];
+filter.type="lowpass";filter.frequency.value=850;
+gain.gain.setValueAtTime(0,audioContext.currentTime);
+gain.gain.linearRampToValueAtTime(.055,audioContext.currentTime+1.5);
+gain.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+5);
+osc.connect(filter);filter.connect(gain);gain.connect(masterGain);
+osc.start();osc.stop(audioContext.currentTime+5.2);
+activeOscillators.push(osc);
+}
+async function startMusic(){
+if(musicPlaying)return;
+const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+if(!AudioContextClass)return;
+const token=++stopToken;
+if(!audioContext){
+audioContext=new AudioContextClass();
+masterGain=audioContext.createGain();
+masterGain.gain.value=.5;masterGain.connect(audioContext.destination);
+const drone=audioContext.createOscillator();
+const droneGain=audioContext.createGain();
+drone.type="sine";drone.frequency.value=110;droneGain.gain.value=.035;
+drone.connect(droneGain);droneGain.connect(masterGain);drone.start();
+activeOscillators.push(drone);
+}
+await audioContext.resume();
+if(token!==stopToken)return;
+musicPlaying=true;
+document.getElementById("musicToggle").textContent="♫ إيقاف الموسيقى";
+document.getElementById("musicBars").classList.add("playing");
+playNote();
+musicTimer=setInterval(playNote,3200);
+}
+function stopMusic(){
+musicPlaying=false;stopToken++;
+if(musicTimer){clearInterval(musicTimer);musicTimer=null}
+if(audioContext&&masterGain){
+const oldContext=audioContext,oldGain=masterGain;
+oldGain.gain.setTargetAtTime(0,oldContext.currentTime,.15);
+setTimeout(()=>{
+if(!musicPlaying&&audioContext===oldContext){
+activeOscillators.forEach(osc=>{try{osc.stop()}catch(e){}});
+activeOscillators=[];oldContext.close();
+audioContext=null;masterGain=null;
+}
+},450);
+}
+document.getElementById("musicToggle").textContent="♫ تشغيل الموسيقى";
+document.getElementById("musicBars").classList.remove("playing");
+}
+document.getElementById("musicToggle").onclick=()=>musicPlaying?stopMusic():startMusic();
+
+document.getElementById("downloadStory").onclick=()=>{
+const text=`حضارة العراق: من أرض الرافدين إلى بغداد
+
+سومر:
+في جنوب بلاد الرافدين نشأت مدن سومر مثل أور وأوروك. تطورت الكتابة المسمارية وبُنيت المعابد والزقورات.
+
+آشور:
+نشأت الدولة الآشورية في شمال العراق واشتهرت بالقصور والنقوش واللاماسو المجنح.
+
+بابل:
+بلغت بابل أوجها في عهد نبوخذ نصر الثاني، واشتهرت بأسوارها وبوابة عشتار.
+
+بغداد العباسية:
+تأسست بغداد عام 762م على يد الخليفة أبي جعفر المنصور وأصبحت مركزاً للعلم والترجمة والمعرفة.
+
+إعداد: أحمد نعمة - NEON SPACE`;
+const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+const url=URL.createObjectURL(blob);
+const link=document.createElement("a");
+link.href=url;link.download="حضارة-العراق-NEON-SPACE.txt";
+document.body.appendChild(link);link.click();link.remove();
+URL.revokeObjectURL(url);
+};
+</script>
+</body>
+</html>
